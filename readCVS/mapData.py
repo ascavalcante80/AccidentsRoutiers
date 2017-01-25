@@ -18,7 +18,32 @@ for year in range(2005,2016):
     lieux_dic = {}
 
     with open(data_folder + 'usagers_' + str(year) + '.csv') as usager_file:
-        usager_data = [line for line in csv.reader(usager_file)]
+        usager_data = []
+
+        temp_line = []
+        for index, line in enumerate(csv.reader(usager_file)):
+
+            line_temp = list(line)
+
+            if index != 0:
+                try:
+                    # convert year and birthday date in age
+                    line_temp[10] = int(year) - int(line_temp[10])
+                except ValueError:
+                    line_temp[10] = 0
+                # convert information about security equipement
+                if line_temp[6].startswith('1'):
+                    line_temp[6] = 1  # person was using security equip
+                else:
+                    line_temp[6] = 0
+
+
+            line_temp.pop(5) # pop information about traject
+            line_temp.pop(7)  # pop information about locp
+            line_temp.pop(7)  # pop information about actp
+            line_temp.pop(6)  # pop information about etatp
+            #todo substituir as informações de pieton - e colocar 0 no campo lugar do condutor, quando for pedestre
+            usager_data.append(line_temp)
 
     with open(data_folder + 'caracteristiques_' + str(year) + '.csv', encoding='iso-8859-1') as caracteristiques_file:
 
@@ -53,6 +78,7 @@ for year in range(2005,2016):
             line.pop(10) # exclude gps
             line.pop(10) # exclude latitude
             line.pop(10) # exclude longitude
+            line.pop(10) # exclude department
 
             if index == 0:
                 caracteristiques_dic['header'] = line[1:]
@@ -73,13 +99,15 @@ for year in range(2005,2016):
     with open(data_folder + 'lieux_' + str(year) + '.csv') as lieux_file:
         for index,line in enumerate(csv.reader(lieux_file)):
 
-            line.pop(3)
-            line.pop(3)
-            line.pop(5)
-            line.pop(5)
-            line.pop(8)
-            line.pop(8)
-            line.pop(11)
+            line.pop(2) # eliminate voie
+            line.pop(2) # eliminate v1
+            line.pop(2) # eliminate v2
+            line.pop(3) # eliminate nbv
+            line.pop(3) # eliminate pr
+            line.pop(3) # eliminate pr1
+            line.pop(6) # eliminate lartpc
+            line.pop(6) # eliminate larrout
+            line.pop(9) # eliminate env1
 
             if index == 0:
                 lieux_dic['header'] = line[1:]
@@ -105,8 +133,9 @@ print(str(len(all_data)))
 with open('../data/all_data.csv', 'w') as csv_file:
 
     header = all_data['header']
-    header.pop(10)
-    header.pop(35)
+    # excluding vehicule codes
+    header.pop(6)
+    header.pop(28)
     csv_writer = csv.writer(csv_file, delimiter=',',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
     csv_writer.writerow(header)
@@ -114,8 +143,8 @@ with open('../data/all_data.csv', 'w') as csv_file:
     all_data.pop('header')
 
     for line in all_data.values():
-        line.pop(10) # excluding vehicule code
-        line.pop(35) # excluding vehicule code
+        line.pop(6) # excluding vehicule code
+        line.pop(28) # excluding vehicule code
         csv_writer.writerow(line)
 
 
